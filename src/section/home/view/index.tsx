@@ -5,9 +5,12 @@ import Loader from "@/component/loader";
 import Select from "@/component/select";
 import { useAppData } from "@/context";
 import { debounce } from "lodash";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Header from "@/layout/header";
+import { getStoredJSONValuesFromLocalStorage } from "@/util/helper";
+import paths from "@/util/paths";
+import { useRouter } from "next/navigation";
 import ProductCard from "../product-card";
 
 const MainPage = () => {
@@ -23,6 +26,8 @@ const MainPage = () => {
     maxPrice: "",
     searchQuery: "",
   });
+
+  const router = useRouter();
 
   const [noResults, setNoResults] = useState(false);
 
@@ -99,6 +104,17 @@ const MainPage = () => {
     }
     return pages;
   };
+
+  const checkForUser = async () => {
+    const currentUser = getStoredJSONValuesFromLocalStorage("currentUser");
+    if (!currentUser) {
+      router.push(paths.auth.login);
+    }
+  };
+
+  useEffect(() => {
+    checkForUser();
+  }, [router]);
 
   if (isLoading) return <Loader />;
 
