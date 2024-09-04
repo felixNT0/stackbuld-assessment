@@ -2,13 +2,11 @@
 
 import Loader from "@/component/loader";
 import { useAppData } from "@/context";
-import paths from "@/util/paths";
-import { useRouter } from "next/navigation";
 import {
   closeSnackbar,
   SnackbarProvider as NotistackProvider,
 } from "notistack";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import {
   FaCheckCircle,
   FaExclamationTriangle,
@@ -36,17 +34,17 @@ const CloseButton = styled.button`
 
 export default function Layout({ children }: Props) {
   const notistackRef = useRef<any>(null);
-  const { currentUser, isLoading } = useAppData();
+  const { isLoading } = useAppData();
 
-  const router = useRouter();
+  // const router = useRouter();
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!currentUser || !currentUser.isLoggedIn) {
-        router.push(paths.auth.login);
-      }
-    }
-  }, [currentUser, isLoading, router]);
+  // useEffect(() => {
+  //   if (!isLoading) {
+  //     if (!currentUser || !currentUser.isLoggedIn) {
+  //       router.push(paths.auth.login);
+  //     }
+  //   }
+  // }, [currentUser, isLoading, router]);
 
   if (isLoading) return <Loader />;
 
