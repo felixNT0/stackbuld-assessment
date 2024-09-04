@@ -20,8 +20,14 @@ interface ProductDetailProps {
 
 const ProductDetail: React.FC<ProductDetailProps> = ({ id }) => {
   const router = useRouter();
-  const { products, addToCart, removeFromCart, cartData, removeProduct } =
-    useAppData();
+  const {
+    products,
+    addToCart,
+    removeFromCart,
+    cartData,
+    removeProduct,
+    addToCheckout,
+  } = useAppData();
   const { enqueueSnackbar } = useSnackbar();
   const product = products.find((p) => p.id === id) as ProductItem;
   const [isModalOpen, setModalOpen] = useState(false);
@@ -58,6 +64,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ id }) => {
     setModalOpen(false);
   };
 
+  const handAddToCheckout = () => {
+    const checkoutProduct = { ...product, quantity: 1 };
+    addToCheckout([checkoutProduct]);
+  };
+
   if (!product) return <Loader />;
 
   return (
@@ -92,7 +103,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ id }) => {
               product.category.slice(1)}
           </p>
           <p className="text-2xl font-semibold mb-4">${product.price}</p>
-          <p className="text-gray-800 mb-6">{product.description}</p>
 
           <div className="flex items-center mb-6 gap-4">
             <Button
@@ -105,27 +115,37 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ id }) => {
             <Button
               onClick={() => {
                 router.push(`${paths.app.checkout}/${product.price}`);
+                handAddToCheckout();
               }}
             >
               <MdSell className="mr-4 text-xl" />
               Buy
             </Button>
           </div>
-          <div className="flex items-center space-x-4">
-            <Button aria-label="Edit" onClick={handleEdit}>
-              Edit
-            </Button>
-            <Button aria-label="Delete" onClick={handleDelete}>
-              Delete
-            </Button>
+          <div className="flex items-center justify-end space-x-4">
             <button
-              className="ml-4 bg-green-500 text-white p-2 rounded-full shadow-md hover:bg-green-600"
+              className="ml-4 bg-green-500 outline-none text-white p-2 rounded-full shadow-md hover:bg-green-600"
               aria-label="Save for later"
               onClick={() => {}}
             >
               <MdFavorite />
             </button>
+            <Button
+              className="max-w-[200px]"
+              aria-label="Edit"
+              onClick={handleEdit}
+            >
+              Edit
+            </Button>
+            <Button
+              className="max-w-[200px]"
+              aria-label="Delete"
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
           </div>
+          <p className="text-gray-800 my-6">{product.description}</p>
         </div>
       </div>
       {isModalOpen && (

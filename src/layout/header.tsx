@@ -3,10 +3,7 @@
 import CartDrawer from "@/component/cart";
 import NotificationDrawer from "@/component/notification";
 import { useAppData } from "@/context";
-import {
-  getStoredJSONValuesFromLocalStorage,
-  setStoredJSONValuesToLocalStorage,
-} from "@/util/helper";
+import { getStoredJSONValuesFromLocalStorage } from "@/util/helper";
 import paths from "@/util/paths";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
@@ -23,7 +20,7 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
-  const { cartData } = useAppData();
+  const { cartData, logout } = useAppData();
 
   const currentUser = getStoredJSONValuesFromLocalStorage("currentUser");
 
@@ -54,10 +51,7 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    await setStoredJSONValuesToLocalStorage("currentUser", {
-      ...currentUser,
-      isLoggedIn: false,
-    });
+    logout();
     setIsLoggedIn(false);
     router.push("/login");
   };
@@ -142,21 +136,21 @@ const Navbar = () => {
                         >
                           <div className="py-1">
                             <Link
-                              href="/profile"
+                              href={paths.app.profile}
                               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               onClick={toggleDropdown}
                             >
                               Profile
                             </Link>
                             <Link
-                              href="/orders"
+                              href={paths.app.orders}
                               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               onClick={toggleDropdown}
                             >
                               Orders
                             </Link>
                             <Link
-                              href="/settings"
+                              href={paths.app.profile}
                               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               onClick={toggleDropdown}
                             >

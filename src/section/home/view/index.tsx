@@ -1,16 +1,13 @@
 "use client";
 
 import Input from "@/component/input";
-import Loader from "@/component/loader";
 import Select from "@/component/select";
 import { useAppData } from "@/context";
 import { debounce } from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
+import Loader from "@/component/loader";
 import Header from "@/layout/header";
-import { getStoredJSONValuesFromLocalStorage } from "@/util/helper";
-import paths from "@/util/paths";
-import { useRouter } from "next/navigation";
 import ProductCard from "../product-card";
 
 const MainPage = () => {
@@ -27,12 +24,10 @@ const MainPage = () => {
     searchQuery: "",
   });
 
-  const router = useRouter();
-
   const [noResults, setNoResults] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const { products, categories, isLoading } = useAppData();
+  const { products, categories, isLoadingProduct } = useAppData();
 
   const itemsPerPage = 12;
 
@@ -105,18 +100,7 @@ const MainPage = () => {
     return pages;
   };
 
-  const checkForUser = async () => {
-    const currentUser = getStoredJSONValuesFromLocalStorage("currentUser");
-    if (!currentUser) {
-      router.push(paths.auth.login);
-    }
-  };
-
-  useEffect(() => {
-    checkForUser();
-  }, [router]);
-
-  if (isLoading) return <Loader />;
+  if (isLoadingProduct) return <Loader />;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -194,7 +178,12 @@ const MainPage = () => {
 
         {/* Item Grid */}
         <div className="flex-1 pl-4 lg:pl-[calc(25%+5rem)]">
-          {noResults ? (
+          {products?.length === 0 && (
+            <div className="text-center py-10 text-lg font-semibold text-gray-600">
+              No Product to display
+            </div>
+          )}
+          {products?.length > 0 && noResults ? (
             <div className="text-center py-10 text-lg font-semibold text-gray-600">
               No results found. Please try adjusting your filters.
             </div>

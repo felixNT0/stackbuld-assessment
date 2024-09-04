@@ -10,6 +10,7 @@ interface CustomButtonProps {
   loading?: boolean;
   children: React.ReactNode;
   rounded?: boolean;
+  className?: string;
 }
 
 const IconButton: React.FC<CustomButtonProps> = ({
@@ -19,13 +20,14 @@ const IconButton: React.FC<CustomButtonProps> = ({
   loading = false,
   children,
   rounded,
+  className,
 }) => {
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`p-4 h-11 w-11 ${
+      className={`${className} p-4 h-11 w-11 ${
         rounded ? "rounded-full" : "rounded"
       }  text-white font-bold text-xl transition duration-300 ease-in-out focus:outline-none ${
         disabled || loading

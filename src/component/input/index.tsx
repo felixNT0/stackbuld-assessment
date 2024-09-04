@@ -1,8 +1,11 @@
-// component/input.tsx
+import {
+  InputHTMLAttributes,
+  TextareaHTMLAttributes,
+  useRef,
+  useState,
+} from "react";
+import { FaCalendarAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 
-import { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
-
-// Union type to allow both input and textarea attributes
 type InputProps = InputHTMLAttributes<HTMLInputElement> &
   TextareaHTMLAttributes<HTMLTextAreaElement> & {
     label: string;
@@ -13,7 +16,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> &
     helperText?: string;
     status?: string;
     textColor?: boolean | string;
-    as?: "input" | "textarea"; // Add this prop to choose between input and textarea
+    as?: "input" | "textarea";
   };
 
 const Input = ({
@@ -25,9 +28,11 @@ const Input = ({
   helperText,
   status,
   textColor,
-  as = "input", // Default to 'input'
+  as = "input",
   ...rest
 }: InputProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+
   const commonProps = {
     id: name,
     name,
@@ -40,6 +45,14 @@ const Input = ({
     ...rest,
   };
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleCalendarClick = () => {
+    if (inputRef.current) {
+      inputRef.current.showPicker();
+    }
+  };
+
   return (
     <div className="mb-4 w-full relative">
       {label && (
@@ -48,13 +61,49 @@ const Input = ({
         </label>
       )}
       {as === "input" ? (
-        <input type={type} {...commonProps} />
+        <div className="relative">
+          <input
+            ref={inputRef}
+            onClick={type === "date" ? handleCalendarClick : undefined}
+            type={type === "password" && showPassword ? "text" : type}
+            {...commonProps}
+          />
+          {type === "password" && (
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className={`absolute inset-y-0 right-0 flex items-center pr-3 ${
+                textColor ? "text-black" : "text-white"
+              } focus:outline-none`}
+            >
+              {showPassword ? (
+                <FaEyeSlash className="text-gray-100" />
+              ) : (
+                <FaEye className="text-gray-100" />
+              )}
+            </button>
+          )}
+        </div>
       ) : (
         <textarea rows={5} {...commonProps} />
+      )}
+      {type === "date" && (
+        <div
+          className="absolute inset-y-0 right-0 pr-3 top-7 flex items-center cursor-pointer"
+          onClick={handleCalendarClick}
+        >
+          <FaCalendarAlt className="text-gray-100" />
+        </div>
       )}
       {helperText && (
         <div className="text-red-500 text-sm mt-1">{helperText}</div>
       )}
+      <style jsx global>{`
+        /* Hide the default calendar icon */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };

@@ -104,7 +104,7 @@ const CreateProduct = () => {
           onSubmit={handleSubmit}
         >
           {(formik) => {
-            const { getFieldProps, isValid, setFieldValue } = formik;
+            const { getFieldProps, isValid, setFieldValue, dirty } = formik;
 
             return (
               <Form className="w-full">
@@ -164,7 +164,11 @@ const CreateProduct = () => {
                 </div>
 
                 <div className="mt-6">
-                  <Button loading={isLoading} type="submit" disabled={!isValid}>
+                  <Button
+                    loading={isLoading}
+                    type="submit"
+                    disabled={!isValid || !dirty}
+                  >
                     Add Product
                   </Button>
                 </div>

@@ -60,7 +60,6 @@ const Login = () => {
           setError("Invalid email or password");
           setIsLoading(false);
         }, 3000);
-        enqueueSnackbar("Invalid email or password", { variant: "error" });
       }
     } catch (e) {
       enqueueSnackbar("An error occurred", { variant: "error" });
@@ -88,7 +87,7 @@ const Login = () => {
           onSubmit={handleSubmit}
         >
           {(formik) => {
-            const { getFieldProps, isValid } = formik;
+            const { getFieldProps, isValid, dirty } = formik;
             return (
               <Form>
                 <motion.div className="space-y-6 placeholder:text-gray-100 w-full">
@@ -113,7 +112,7 @@ const Login = () => {
                   <Button
                     loading={isLoading}
                     type={"submit"}
-                    disabled={!isValid}
+                    disabled={!isValid || !dirty}
                   >
                     {"Login"}
                   </Button>

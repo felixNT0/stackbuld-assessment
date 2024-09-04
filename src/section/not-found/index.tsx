@@ -1,6 +1,7 @@
 "use client";
 
 import Button from "@/component/button";
+import paths from "@/util/paths";
 import { useRouter } from "next/navigation";
 
 const NotFound = () => {
@@ -18,7 +19,10 @@ const NotFound = () => {
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Button onClick={() => router.back()}>go Back</Button>
 
-          <p className="text-sm font-semibold text-gray-900 w-full">
+          <p
+            onClick={() => router.push(paths.app.contact)}
+            className="text-sm font-semibold text-gray-900 w-full"
+          >
             Contact support <span aria-hidden="true">&rarr;</span>
           </p>
         </div>

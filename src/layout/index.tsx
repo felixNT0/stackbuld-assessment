@@ -1,10 +1,14 @@
 "use client";
 
+import Loader from "@/component/loader";
+import { useAppData } from "@/context";
+import paths from "@/util/paths";
+import { useRouter } from "next/navigation";
 import {
   closeSnackbar,
   SnackbarProvider as NotistackProvider,
 } from "notistack";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   FaCheckCircle,
   FaExclamationTriangle,
@@ -32,6 +36,19 @@ const CloseButton = styled.button`
 
 export default function Layout({ children }: Props) {
   const notistackRef = useRef<any>(null);
+  const { currentUser, isLoading } = useAppData();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!currentUser || !currentUser.isLoggedIn) {
+        router.push(paths.auth.login);
+      }
+    }
+  }, [currentUser, isLoading, router]);
+
+  if (isLoading) return <Loader />;
 
   return (
     <NotistackProvider
@@ -70,7 +87,6 @@ export default function Layout({ children }: Props) {
         warning: StyledNotistack,
         error: StyledNotistack,
       }}
-      // with close as default
       action={(snackbarId) => (
         <CloseButton onClick={() => closeSnackbar(snackbarId)}>
           <FaTimes size={16} />

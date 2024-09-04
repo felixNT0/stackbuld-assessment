@@ -36,7 +36,7 @@ const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  const initialValues = {
+  const initialValues: IUser = {
     first_name: "",
     last_name: "",
     display_name: "",
@@ -57,7 +57,6 @@ const Register = () => {
         ...values,
         isLoggedIn: true,
       });
-      enqueueSnackbar("Successfully");
       setTimeout(() => {
         router.push("/login");
         setIsLoading(false);
@@ -87,7 +86,7 @@ const Register = () => {
           onSubmit={handleSubmit}
         >
           {(formik) => {
-            const { getFieldProps, isValid, values, errors } = formik;
+            const { getFieldProps, isValid, values, errors, dirty } = formik;
             return (
               <Form>
                 {currentStep === 1 && (
@@ -188,7 +187,7 @@ const Register = () => {
                       <Button
                         loading={isLoading}
                         type={"submit"}
-                        disabled={!isValid}
+                        disabled={!isValid || !dirty}
                       >
                         {"Register"}
                       </Button>

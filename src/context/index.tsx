@@ -23,15 +23,45 @@ interface CartItem extends ProductItem {
   quantity: number;
 }
 
+interface OrderItem {
+  productId: string;
+  productName: string;
+  imageUrl: string;
+  quantity: number;
+  price: number;
+}
+
+export interface Order {
+  id: string;
+  customerName: string;
+  email: string;
+  orderDate: string;
+  status: "Pending" | "Shipped" | "Delivered" | "Cancelled";
+  totalAmount: number;
+  items: OrderItem[];
+}
+
 interface CategoryOption {
   value: string;
   label: string;
 }
 
+const initialUser: IUser = {
+  isLoggedIn: false,
+  first_name: "",
+  last_name: "",
+  display_name: "",
+  date_of_birth: "",
+  email: "",
+  password: "",
+  password_confirm: "",
+};
+
 interface AppContextType {
   products: Product[];
   cartData: CartItem[];
   categories: CategoryOption[];
+  orders: Order[];
   addProduct: (value: Product) => void;
   removeProduct: (productId: string) => void;
   updateProducts: (value: Product[]) => void;
@@ -39,8 +69,17 @@ interface AppContextType {
   editProduct: (product: ProductItem) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
-  currentUser?: any;
+  makeOrder: (order: Order) => void;
+  cancelOrder: (orderId: string) => void;
+  changeOrderStatus: (orderId: string, status: Order["status"]) => void;
+  updateOrderList: (orders: Order[]) => void;
+  currentUser: IUser;
   isLoading: boolean;
+  isLoadingProduct: boolean;
+  updateCartData: (cartData: CartItem[]) => void;
+  logout: () => void;
+  addToCheckout: (item: CartItem[]) => void;
+  checkoutItems: CartItem[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -49,11 +88,54 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [cartData, setCart] = useState<CartItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(true);
+  const [currentUser, setCurrentUser] = useState<IUser>(initialUser);
+
+  const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const storedUser = await getStoredJSONValuesFromLocalStorage(
+        "currentUser"
+      );
+      if (storedUser) {
+        setCurrentUser(storedUser);
+      }
+      setIsLoading(false);
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchCheckoutItems = async () => {
+      const checkoutItems = await getStoredJSONValuesFromLocalStorage(
+        "checkoutItems"
+      );
+      if (checkoutItems) {
+        setCheckoutItems(checkoutItems);
+      }
+    };
+
+    fetchCheckoutItems();
+  }, []);
+
+  useEffect(() => {
+    const fetchOrderItems = async () => {
+      const orderItems = await getStoredJSONValuesFromLocalStorage("orders");
+      if (orderItems) {
+        setOrders(orderItems);
+      }
+    };
+
+    fetchOrderItems();
+  }, []);
 
   const fetchProducts = async () => {
     try {
-      setIsLoading(true);
+      setIsLoadingProduct(true);
       const response = await fetch("https://fakestoreapi.com/products");
       const data = await response.json();
 
@@ -75,9 +157,9 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
       }
       setProducts(() => [...storedProducts]);
 
-      setIsLoading(false);
+      setIsLoadingProduct(false);
     } catch (error) {
-      setIsLoading(false);
+      setIsLoadingProduct(false);
     }
   };
 
@@ -117,22 +199,21 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = (product: ProductItem) => {
     setCart((prevCart) => {
-      const existingItem = prevCart?.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevCart?.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
-      }
+      const existingItem = prevCart.find((item) => item.id === product.id);
+      const updatedCart = existingItem
+        ? prevCart.map((item) =>
+            item.id === product.id ? { ...item, quantity: 1 } : item
+          )
+        : [...prevCart, { ...product, quantity: 1 }];
+
+      updateCartData(updatedCart);
+      return updatedCart;
     });
   };
 
   const removeFromCart = (productId: string) => {
     setCart((prevCart) => {
-      return prevCart
+      const updatedCart = prevCart
         .map((item) => {
           if (item.id === productId) {
             if (item.quantity > 1) {
@@ -143,11 +224,14 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
           return item;
         })
         .filter((item) => item !== null);
+      updateCartData(updatedCart);
+      return updatedCart;
     });
   };
 
   const clearCart = () => {
     setCart([]);
+    updateCartData([]);
   };
 
   const addProduct = (product: Product) => {
@@ -170,15 +254,72 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchCart = async () => {
-    const storedCart = await getStoredJSONValuesFromLocalStorage("cart");
-    if (storedCart) {
-      setCart(storedCart);
+    try {
+      const storedCart = await getStoredJSONValuesFromLocalStorage("cart");
+      if (storedCart) {
+        setCart(storedCart);
+      }
+    } catch (error) {
+      console.error(`Error fetching cart data: ${error}`);
     }
   };
 
-  useEffect(() => {
-    setStoredJSONValuesToLocalStorage("cart", cartData);
-  }, [cartData]);
+  const logout = async () => {
+    const currentUser = await getStoredJSONValuesFromLocalStorage(
+      "currentUser"
+    );
+
+    if (currentUser) {
+      const updatedUser = { ...currentUser, isLoggedIn: false };
+      setCurrentUser(updatedUser);
+      await setStoredJSONValuesToLocalStorage("currentUser", updatedUser);
+    }
+  };
+
+  const updateCartData = async (updatedCartData: CartItem[]) => {
+    try {
+      setCart(updatedCartData);
+      await setStoredJSONValuesToLocalStorage("cart", updatedCartData);
+    } catch (error) {
+      console.error("Failed to update cart data:", error);
+    }
+  };
+
+  const makeOrder = async (order: Order) => {
+    const updatedOrders = [...orders, order];
+    setOrders(updatedOrders);
+    await setStoredJSONValuesToLocalStorage("orders", updatedOrders);
+  };
+
+  const cancelOrder = async (orderId: string) => {
+    const updatedOrders = orders.filter((order) => order.id !== orderId);
+    setOrders(updatedOrders as any);
+    await setStoredJSONValuesToLocalStorage("orders", updatedOrders);
+  };
+
+  const changeOrderStatus = async (
+    orderId: string,
+    status: Order["status"]
+  ) => {
+    const updatedOrders = orders.map((order) =>
+      order.id === orderId ? { ...order, status } : order
+    );
+    setOrders(updatedOrders);
+    await setStoredJSONValuesToLocalStorage("orders", updatedOrders);
+  };
+
+  const updateOrderList = async (orders: Order[]) => {
+    setOrders(orders);
+    await setStoredJSONValuesToLocalStorage("orders", orders);
+  };
+
+  const addToCheckout = (product: CartItem[]) => {
+    const products = Array.isArray(product) ? product : [];
+    setCheckoutItems(() => {
+      setStoredJSONValuesToLocalStorage("checkoutItems", products);
+      return products;
+    });
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -193,6 +334,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
         products,
         categories,
         cartData: Array.isArray(cartData) ? cartData : [],
+        orders: Array.isArray(orders) ? orders : [],
         updateProducts,
         addToCart,
         removeFromCart,
@@ -200,6 +342,16 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
         addProduct,
         removeProduct,
         editProduct,
+        updateCartData,
+        makeOrder,
+        cancelOrder,
+        changeOrderStatus,
+        updateOrderList,
+        logout,
+        currentUser,
+        isLoadingProduct,
+        addToCheckout,
+        checkoutItems,
       }}
     >
       {children}

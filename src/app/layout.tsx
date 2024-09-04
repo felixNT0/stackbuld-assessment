@@ -1,6 +1,7 @@
 import AppContextProvider from "@/context";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Head from "next/head";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -17,6 +18,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <Head>
+        <link
+          rel="canonical"
+          href={"https://fkt-stackbuld-assessment.vercel.app/"}
+        />
+        <link
+          rel="icon"
+          href="https://simicart.com/wp-content/uploads/eCommerce-logo.jpg"
+        />
+      </Head>
       <body className={inter.className}>
         <AppContextProvider>{children}</AppContextProvider>
       </body>

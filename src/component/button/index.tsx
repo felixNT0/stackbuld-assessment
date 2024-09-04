@@ -31,7 +31,7 @@ const Button: React.FC<CustomButtonProps> = ({
           : "bg-[#216869] hover:bg-[#216869]/90"
       } flex items-center justify-center`}
     >
-      {loading ? <FaSpinner className="animate-spin mr-2" /> : children}
+      {loading ? <FaSpinner className="animate-spin mr-2 my-1" /> : children}
     </button>
   );
 };

@@ -1,7 +1,13 @@
 "use client";
 import Button from "@/component/button";
 import Input from "@/component/input";
-import { formikHelper } from "@/util/helper";
+import { useAppData } from "@/context";
+import {
+  formikHelper,
+  generateUniqueId,
+  removeDataFromLocalStorage,
+} from "@/util/helper";
+import paths from "@/util/paths";
 import { Form, Formik } from "formik";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -28,6 +34,8 @@ const Checkout: React.FC<Props> = ({ id }) => {
   const { enqueueSnackbar } = useSnackbar();
   const router = useRouter();
 
+  const { checkoutItems, makeOrder } = useAppData();
+
   const price = Number(id!) || 0;
 
   const initialValues = {
@@ -43,14 +51,37 @@ const Checkout: React.FC<Props> = ({ id }) => {
   const handleSubmit = async (values: typeof initialValues) => {
     try {
       setIsLoading(true);
-      // Mock API request
-      setTimeout(() => {
+      const totalAmount = checkoutItems.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+      );
+      const order = {
+        id: generateUniqueId(),
+        customerName: values.fullName,
+        email: values.email,
+        orderDate: new Date().toISOString(),
+        status: "Pending",
+        totalAmount,
+        items: checkoutItems.map((item) => ({
+          productId: item.id,
+          productName: item.name,
+          imageUrl: item.imageUrl,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      };
+
+      setTimeout(async () => {
+        await makeOrder(order as any);
         enqueueSnackbar("Order placed successfully!", { variant: "success" });
-        router.push("/confirmation"); // Redirect to a confirmation page
+        router.push(paths.app.orders);
         setIsLoading(false);
-      }, 2000);
+        removeDataFromLocalStorage("checkoutItems");
+      }, 3000);
     } catch (error) {
-      console.error("Error processing order:", error);
+      enqueueSnackbar("Failed to place order. Please try again.", {
+        variant: "error",
+      });
       setIsLoading(false);
     }
   };
@@ -204,6 +235,7 @@ const Checkout: React.FC<Props> = ({ id }) => {
                 <div className="mt-8">
                   <Button
                     type="submit"
+                    loading={isLoading}
                     disabled={!isValid || isSubmitting || isLoading}
                   >
                     {isLoading ? "Processing..." : "Place Order"}
